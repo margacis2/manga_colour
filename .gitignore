@@ -1,0 +1,58 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.db
+data/*.db
+data/bluebox.db
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+apps/web/node_modules/
+apps/web/dist/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Models & Weights (Heavy binaries)
+*.pth
+*.pt
+*.onnx
+*.caffemodel
+*.bin
+data/models/**/*.onnx
+data/models/**/*.caffemodel
+!data/models/**/.gitkeep
+
+# Storage & Uploads
+storage/originals/*
+storage/processed/*
+storage/thumbnails/*
+storage/exports/*
+storage/temp/*
+storage/references/*
+!storage/**/.gitkeep
+data/test_output/*
+!data/test_output/.gitkeep
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
