@@ -86,6 +86,10 @@ def get_hardware_status():
             pass
 
     gpu_info = check_nvidia_smi()
+    model_installed = (
+        os.path.exists("data/models/colorization/manga-colorize-fp16.onnx")
+        or os.path.exists(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "data", "models", "colorization", "manga-colorize-fp16.onnx"))
+    )
 
     return HardwareStatusResponse(
         gpu_available=gpu_info["available"] or cuda_available,
@@ -100,7 +104,8 @@ def get_hardware_status():
         cuda_available=cuda_available,
         cuda_version=cuda_version,
         active_worker_running=True,
-        default_provider=settings.DEFAULT_PROVIDER
+        default_provider=settings.DEFAULT_PROVIDER,
+        model_weights_installed=model_installed
     )
 
 @router.get("/providers")

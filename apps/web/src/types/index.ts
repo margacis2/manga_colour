@@ -139,6 +139,7 @@ export interface HardwareStatus {
   cuda_version?: string;
   active_worker_running: boolean;
   default_provider: string;
+  model_weights_installed?: boolean;
 }
 
 export interface ProviderInfo {

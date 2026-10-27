@@ -21,18 +21,23 @@ def get_colorization_model():
     """Loads and caches the ONNX manga colorization model."""
     global _CACHED_NET, _CACHED_NET_PATH
     
-    # Priority path: data/models/colorization/manga-colorize-fp16.onnx
-    model_path = os.path.abspath("data/models/colorization/manga-colorize-fp16.onnx")
-    if not os.path.exists(model_path):
-        # Fallback relative search
-        alt_path = Path(__file__).resolve().parents[4] / "data" / "models" / "colorization" / "manga-colorize-fp16.onnx"
-        if alt_path.exists():
-            model_path = str(alt_path)
-        else:
-            raise FileNotFoundError(
-                f"Manga colorization model weights missing at {model_path}. "
-                "Genuine AI model weights are required for colorization."
-            )
+    candidates = [
+        os.path.abspath("data/models/colorization/manga-colorize-fp16.onnx"),
+        str(Path(__file__).resolve().parents[4] / "data" / "models" / "colorization" / "manga-colorize-fp16.onnx"),
+        str(Path.cwd() / "data" / "models" / "colorization" / "manga-colorize-fp16.onnx"),
+    ]
+    model_path = None
+    for cand in candidates:
+        if os.path.exists(cand):
+            model_path = cand
+            break
+
+    if not model_path:
+        raise FileNotFoundError(
+            "AI Model Weights Missing: 'data/models/colorization/manga-colorize-fp16.onnx' not found on this machine. "
+            "Model files are not included in Git clones (~61.6 MB). Please copy 'manga-colorize-fp16.onnx' into "
+            "'data/models/colorization/' or use the Google Colab notebook ('notebooks/colab_colorization.ipynb')."
+        )
             
     if _CACHED_NET is None or _CACHED_NET_PATH != model_path:
         net = cv2.dnn.readNetFromONNX(model_path)
@@ -151,6 +156,13 @@ def process_single_task(task_id: str):
 
         # Retrieve job and associated palette if configured
         job = db.query(ProcessingJob).filter(ProcessingJob.id == task.job_id).first()
+        if job and job.provider == "colab":
+            raise ValueError(
+                "Google Colab Workflow: The 'colab' provider is designed for remote cloud inference. "
+                "Open 'notebooks/colab_colorization.ipynb' in Google Colab to run GPU colorization, then import your pages. "
+                "To process directly on this machine, switch the Inference Engine to 'Local CPU Fallback' or 'Local NVIDIA GPU'."
+            )
+
         palette_data = None
         if job:
             palette = db.query(Palette).filter(Palette.project_id == job.project_id, Palette.is_default == True).first()
@@ -219,12 +231,14 @@ def process_single_task(task_id: str):
             job = db.query(ProcessingJob).filter(ProcessingJob.id == task.job_id).first()
             if job:
                 job.failed_pages += 1
+                job.error_message = str(e)
                 if job.completed_pages + job.failed_pages >= job.total_pages:
                     job.status = "completed" if job.completed_pages > 0 else "failed"
                     job.completed_at = datetime.now(timezone.utc)
             db.commit()
     finally:
         db.close()
+
 
 def run_job_synchronously_or_async(job_id: str):
     """Executes all pending tasks in the job."""

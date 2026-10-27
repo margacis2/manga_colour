@@ -18,7 +18,8 @@ import {
   BookOpen,
   Trash2,
   AlertTriangle,
-  Filter
+  Filter,
+  Cloud
 } from 'lucide-react';
 import { api } from '../api/client';
 import { ProcessingJob, ProcessingTask } from '../types';
@@ -150,6 +151,32 @@ export const ProcessingCenter: React.FC = () => {
         </div>
       </div>
 
+      {/* Model Weights Missing Warning Banner */}
+      {hardware && hardware.model_weights_installed === false && (
+        <div className="p-4 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 shadow-sm flex items-start space-x-3.5">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1 text-xs">
+            <h4 className="font-bold text-amber-900 dark:text-amber-100">AI Model Weights Not Installed On This Computer</h4>
+            <p className="text-amber-700 dark:text-amber-300 leading-relaxed">
+              The required ONNX weights file (<code className="bg-amber-100 dark:bg-amber-900/60 px-1 py-0.5 rounded text-[11px] font-mono">data/models/colorization/manga-colorize-fp16.onnx</code>) is missing on this machine. Git excludes heavy model binaries (~61.6 MB).
+            </p>
+            <div className="pt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="font-semibold text-amber-950 dark:text-amber-100">Ways to run:</span>
+              <span>1. Copy the model file into <code className="bg-amber-100 dark:bg-amber-900/60 px-1 rounded font-mono">data/models/colorization/</code></span>
+              <span>•</span>
+              <a
+                href="https://colab.research.google.com/github/margacis2/manga_colour/blob/main/notebooks/colab_colorization.ipynb"
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-amber-900 dark:text-amber-200 underline hover:text-amber-950"
+              >
+                2. Run in Google Colab (Free T4 Cloud GPU) ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Launcher Configuration Card */}
         <div className="space-y-6">
@@ -244,6 +271,26 @@ export const ProcessingCenter: React.FC = () => {
                 ))}
               </select>
             </div>
+
+            {selectedProvider === 'colab' && (
+              <div className="p-3.5 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-200 space-y-2">
+                <div className="font-bold flex items-center text-purple-900 dark:text-purple-100">
+                  <Cloud className="w-4 h-4 mr-1.5 text-purple-600 dark:text-purple-400" />
+                  Google Colab Cloud GPU Workflow
+                </div>
+                <p className="text-[11px] text-purple-700 dark:text-purple-300 leading-relaxed">
+                  Colab runs AI colorization remotely on Google Cloud's free T4 GPUs. Ideal for laptops without local model weights or dedicated GPUs.
+                </p>
+                <a
+                  href="https://colab.research.google.com/github/margacis2/manga_colour/blob/main/notebooks/colab_colorization.ipynb"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] shadow-sm transition"
+                >
+                  Open Colab Notebook ↗
+                </a>
+              </div>
+            )}
 
             {/* Skip Approved Checkbox */}
             <div className="flex items-center space-x-2 pt-1">
@@ -462,6 +509,44 @@ export const ProcessingCenter: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Error Banner on Job Failure */}
+                    {(job.status === 'failed' || job.error_message || (job.tasks && job.tasks.some(t => t.error_message))) && (
+                      <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 space-y-2">
+                        <div className="flex items-center font-bold text-rose-900 dark:text-rose-100">
+                          <AlertCircle className="w-4 h-4 mr-1.5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+                          <span>Inference Error Details</span>
+                        </div>
+                        <p className="font-mono text-[11px] text-rose-700 dark:text-rose-300 break-words leading-relaxed">
+                          {job.error_message || (job.tasks?.find(t => t.error_message)?.error_message) || 'Inference engine failed to colorize pages.'}
+                        </p>
+                        {((job.error_message || '').includes('manga-colorize-fp16.onnx') || (job.tasks?.some(t => (t.error_message || '').includes('manga-colorize-fp16.onnx')))) && (
+                          <div className="pt-2 text-[11px] text-rose-900 dark:text-rose-200 border-t border-rose-200 dark:border-rose-800 space-y-1">
+                            <p className="font-semibold">💡 Why this failed on this laptop:</p>
+                            <p className="text-rose-700 dark:text-rose-300">
+                              Git repositories do not include heavy neural network model weights (~61.6 MB).
+                            </p>
+                            <div className="pt-1 flex flex-wrap gap-2">
+                              <span>1. Copy <code className="bg-rose-100 dark:bg-rose-900/60 px-1 py-0.5 rounded font-mono">manga-colorize-fp16.onnx</code> to <code className="bg-rose-100 dark:bg-rose-900/60 px-1 py-0.5 rounded font-mono">data/models/colorization/</code></span>
+                              <span>•</span>
+                              <a
+                                href="https://colab.research.google.com/github/margacis2/manga_colour/blob/main/notebooks/colab_colorization.ipynb"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-bold underline text-rose-900 dark:text-rose-100 hover:text-rose-950"
+                              >
+                                2. Or colorize on Google Colab (Free T4 Cloud GPU) ↗
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                        {((job.error_message || '').includes('Google Colab Workflow') || job.provider === 'colab') && (
+                          <div className="pt-2 text-[11px] text-rose-900 dark:text-rose-200 border-t border-rose-200 dark:border-rose-800">
+                            <strong>Notice:</strong> The Colab workflow runs in Google Colab's cloud environment. Open <a href="https://colab.research.google.com/github/margacis2/manga_colour/blob/main/notebooks/colab_colorization.ipynb" target="_blank" rel="noreferrer" className="underline font-bold text-rose-900 dark:text-rose-100">notebooks/colab_colorization.ipynb ↗</a> to colorize online.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Expanded Task Details */}
                     {isExpanded && job.tasks && (
                       <div className="pt-3 border-t border-slate-100 space-y-2">
@@ -472,28 +557,35 @@ export const ProcessingCenter: React.FC = () => {
                           {job.tasks.map((task) => (
                             <div
                               key={task.id}
-                              className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
+                              className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5 text-xs"
                             >
-                              <span className="font-semibold text-slate-700">
-                                Page Task #{task.task_order}
-                              </span>
-                              <div className="flex items-center space-x-2">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  task.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
-                                  task.status === 'processing' ? 'bg-studio-100 text-studio-800 animate-pulse' :
-                                  task.status === 'failed' ? 'bg-rose-100 text-rose-800' : 'bg-slate-200 text-slate-700'
-                                }`}>
-                                  {task.status}
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold text-slate-700">
+                                  Page Task #{task.task_order}
                                 </span>
-                                {task.status === 'completed' && (
-                                  <Link
-                                    to={`/editor?page_id=${task.page_id}`}
-                                    className="text-[11px] font-semibold text-studio-600 hover:underline"
-                                  >
-                                    View
-                                  </Link>
-                                )}
+                                <div className="flex items-center space-x-2">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    task.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                                    task.status === 'processing' ? 'bg-studio-100 text-studio-800 animate-pulse' :
+                                    task.status === 'failed' ? 'bg-rose-100 text-rose-800' : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    {task.status}
+                                  </span>
+                                  {task.status === 'completed' && (
+                                    <Link
+                                      to={`/editor?page_id=${task.page_id}`}
+                                      className="text-[11px] font-semibold text-studio-600 hover:underline"
+                                    >
+                                      View
+                                    </Link>
+                                  )}
+                                </div>
                               </div>
+                              {task.error_message && (
+                                <p className="text-[11px] text-rose-600 font-mono break-words bg-rose-50/80 p-1.5 rounded-lg border border-rose-100">
+                                  {task.error_message}
+                                </p>
+                              )}
                             </div>
                           ))}
                         </div>

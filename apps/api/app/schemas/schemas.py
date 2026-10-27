@@ -257,6 +257,7 @@ class HardwareStatusResponse(BaseModel):
     cuda_version: Optional[str] = None
     active_worker_running: bool
     default_provider: str
+    model_weights_installed: bool = False
 
 
 # Storage Optimization Schemas
