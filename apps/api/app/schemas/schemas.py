@@ -166,7 +166,7 @@ class JobCreate(BaseModel):
     chapter_id: Optional[str] = None
     page_ids: Optional[List[str]] = None
     provider: str = "local_gpu"
-    model_name: str = "manga_color_v1"
+    model_name: str = "anime_soft_watercolor"
     config: Optional[Dict[str, Any]] = None
     skip_approved: bool = True
 
@@ -238,7 +238,7 @@ class ReadingProgressUpdate(BaseModel):
 class ReadingProgressResponse(ReadingProgressUpdate):
     id: str
     user_id: str
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 

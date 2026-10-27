@@ -248,9 +248,15 @@ export const PageEditor: React.FC = () => {
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-50">
-                <span className="text-slate-400">Model Version</span>
+                <span className="text-slate-400">Model Style</span>
                 <span className="font-semibold text-slate-700">
-                  {page.model_version || 'Anime Soft v1'}
+                  {page.model_version?.includes('vibrant_shonen')
+                    ? 'Vibrant Shonen Action'
+                    : page.model_version?.includes('pastel_shojo')
+                    ? 'Dreamy Pastel Shojo'
+                    : page.model_version?.includes('anime_soft')
+                    ? 'Anime Soft Watercolor'
+                    : page.model_version || 'Anime Soft Watercolor'}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-50">

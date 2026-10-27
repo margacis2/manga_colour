@@ -150,6 +150,16 @@ export interface ProviderInfo {
   recommended: boolean;
 }
 
+export interface ColorStyle {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  aliases: string[];
+  swatches: string[];
+  params: Record<string, number>;
+}
+
 export interface ExportJob {
   id: string;
   project_id: string;

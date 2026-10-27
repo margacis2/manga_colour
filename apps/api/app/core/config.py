@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     )
 
     APP_NAME: str = "Blue Box Color Studio"
+    APP_VERSION: str = "1.2.1"
     APP_MODE: str = "local"  # local | production | hybrid
     DEBUG: bool = True
     SECRET_KEY: str = "dev-secret-change-in-production-blue-box-studio-secret-key-32chars"

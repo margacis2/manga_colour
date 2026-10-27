@@ -141,6 +141,12 @@ def get_providers_info():
         }
     ]
 
+@router.get("/styles")
+def get_color_styles():
+    """Returns authoritative manga colorization styles with metadata and parameter descriptions."""
+    from app.services.color_styles import get_all_styles
+    return get_all_styles()
+
 @router.get("/health")
 def health_check():
     return {

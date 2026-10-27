@@ -50,6 +50,7 @@ data/test_output/*
 *.key
 
 # IDE & OS
+scratch/
 .vscode/
 .idea/
 *.swp

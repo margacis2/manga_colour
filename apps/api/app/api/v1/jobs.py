@@ -7,6 +7,7 @@ from app.models.entities import ProcessingJob, ProcessingTask, Page, Chapter, Pr
 from app.schemas.schemas import JobCreate, ProcessingJobResponse
 from app.api.deps import get_current_user
 from app.services.colorizer_service import run_job_synchronously_or_async
+from app.services.color_styles import normalize_style_id
 
 router = APIRouter(prefix="/jobs", tags=["Processing Jobs"])
 
@@ -37,13 +38,15 @@ def create_processing_job(
             detail="No eligible pages found to process (pages may already be approved or chapter is empty)"
         )
 
+    canonical_style = normalize_style_id(job_in.model_name)
+
     job = ProcessingJob(
         user_id=current_user.id,
         project_id=job_in.project_id,
         chapter_id=job_in.chapter_id,
         status="queued",
         provider=job_in.provider,
-        model_name=job_in.model_name,
+        model_name=canonical_style,
         total_pages=len(pages_to_process),
         completed_pages=0,
         failed_pages=0,

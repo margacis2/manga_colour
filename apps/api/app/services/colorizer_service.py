@@ -12,6 +12,12 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.core.storage import storage
 from app.models.entities import ProcessingJob, ProcessingTask, Page, Palette
+from app.services.color_styles import (
+    STYLE_ANIME_SOFT,
+    STYLE_CONFIGS,
+    normalize_style_id,
+    apply_style_postprocessing,
+)
 
 # Cache the ONNX model in memory to avoid repeated disk reads during batch inference
 _CACHED_NET = None
@@ -60,12 +66,15 @@ def hex_to_rgb(hex_code: str) -> tuple[int, int, int]:
 def colorize_manga_page(
     image_bytes: bytes,
     palette_data: Optional[Dict[str, Any]] = None,
-    style: str = "anime_soft"
+    style: str = STYLE_ANIME_SOFT
 ) -> bytes:
     """
     Colorizes a manga page using the genuine pretrained manga-colorization-v2 ONNX generator.
-    Preserves original high-resolution line art, speech bubbles, screentones, and dialogue text
-    via CIELAB luminance transfer.
+    Applies centralized, edge-aware, luminance-preserving style post-processing per aesthetic:
+    - Anime Soft Watercolor
+    - Vibrant Shonen Action
+    - Dreamy Pastel Shojo
+    Preserves original high-resolution line art, speech bubbles, screentones, and dialogue text.
     """
     net = get_colorization_model()
     
@@ -106,24 +115,14 @@ def colorize_manga_page(
     # Upscale model color prediction back to native original resolution
     color_upscaled = cv2.resize(model_rgb, (orig_w, orig_h), interpolation=cv2.INTER_LANCZOS4)
     
-    # CIELAB luminance transfer:
-    # Retain the neural network's chrominance (a*, b*) while anchoring the Luminance (L)
-    # strictly to the native uncompressed manga scan (orig_gray).
-    # This guarantees speech bubbles and margins stay clean paper white (#FFFFFF)
-    # and all ink strokes, screentones, and dialogue letters remain pitch-black and razor sharp.
-    color_lab = cv2.cvtColor(color_upscaled, cv2.COLOR_RGB2LAB)
-    color_lab[:, :, 0] = orig_gray
-    final_rgb = cv2.cvtColor(color_lab, cv2.COLOR_LAB2RGB)
-    
-    # Optional style tweaks in HSV color space
-    if style == "vibrant_shonen":
-        hsv = cv2.cvtColor(final_rgb, cv2.COLOR_RGB2HSV).astype(np.float32)
-        hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 1.15, 0, 255)
-        final_rgb = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2RGB)
-    elif style == "pastel_shojo":
-        hsv = cv2.cvtColor(final_rgb, cv2.COLOR_RGB2HSV).astype(np.float32)
-        hsv[:, :, 1] = np.clip(hsv[:, :, 1] * 0.85, 0, 255)
-        final_rgb = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2RGB)
+    # Apply centralized style post-processing (luminance tone curves,
+    # color grading, skin tone protection, line-art & speech bubble preservation)
+    final_rgb = apply_style_postprocessing(
+        color_upscaled,
+        orig_gray,
+        style_input=style,
+        palette_data=palette_data
+    )
         
     out_bgr = cv2.cvtColor(final_rgb, cv2.COLOR_RGB2BGR)
     success, encoded = cv2.imencode(".png", out_bgr)
@@ -131,6 +130,7 @@ def colorize_manga_page(
         raise RuntimeError("Failed to encode colorized image to PNG")
         
     return encoded.tobytes()
+
 
 def process_single_task(task_id: str):
     """Worker task that colorizes a single page, validates output, and updates database."""
@@ -176,10 +176,11 @@ def process_single_task(task_id: str):
                     "accent_color": palette.clothing_colors[0] if palette.clothing_colors else "#38a5f8",
                 }
 
-        model_name = job.model_name if job else "anime_soft"
+        model_name = job.model_name if job else STYLE_ANIME_SOFT
+        canonical_style = normalize_style_id(model_name)
         
-        # Execute genuine AI colorization
-        colorized_bytes = colorize_manga_page(image_bytes, palette_data=palette_data, style=model_name)
+        # Execute genuine AI colorization with centralized style engine
+        colorized_bytes = colorize_manga_page(image_bytes, palette_data=palette_data, style=canonical_style)
 
         # Validate colorized output before committing
         if not colorized_bytes or len(colorized_bytes) < 1000:
@@ -201,13 +202,13 @@ def process_single_task(task_id: str):
             thumb_bytes = thumb_buffer.getvalue()
             color_thumb_key, _, _ = storage.save_bytes(thumb_bytes, "thumbnails", ".jpg")
 
-        # Update page record
+        # Update page record with specific model and style fingerprint
         page.current_output_path = out_key
         page.current_output_checksum = out_checksum
         page.thumbnail_path = color_thumb_key
         page.processing_status = "completed"
         page.provider_name = job.provider if job else "local_onnx"
-        page.model_version = "manga-colorization-v2-fp16"
+        page.model_version = f"manga-colorization-v2-fp16:{canonical_style}"
 
         # Update task record
         task.status = "completed"

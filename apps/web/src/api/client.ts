@@ -7,6 +7,7 @@ import {
   ProcessingJob,
   HardwareStatus,
   ProviderInfo,
+  ColorStyle,
   ExportJob
 } from '../types';
 
@@ -149,6 +150,7 @@ export const api = {
   // System & Hardware
   getHardware: () => request<HardwareStatus>('/system/hardware'),
   getProviders: () => request<ProviderInfo[]>('/system/providers'),
+  getStyles: () => request<ColorStyle[]>('/system/styles'),
   getHealth: () => request<{ status: string; app_name: string; mode: string }>('/system/health'),
 
   // Reading Progress

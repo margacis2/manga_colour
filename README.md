@@ -10,6 +10,7 @@ Colorize manga chapters, organize your projects, review AI-generated pages, and 
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-Build-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Release](https://img.shields.io/badge/Release-v1.2.1-emerald.svg)](https://github.com/margacis2/manga_colour/releases)
 [![Google Colab](https://img.shields.io/badge/Google_Colab-Cloud_GPU-F9AB00?logo=googlecolab&logoColor=black)](https://colab.research.google.com/github/margacis2/manga_colour/blob/main/notebooks/colab_colorization.ipynb)
 
 ---
@@ -44,14 +45,16 @@ Notebook: [`notebooks/colab_colorization.ipynb`](notebooks/colab_colorization.ip
 
 Open the notebook from the repository, select **Open in Colab** if available, choose an available GPU runtime, and follow the notebook's setup and inference instructions.
 
-### 🎨 2. AI Manga Colorization
+### 🎨 2. AI Manga Colorization & Distinct Style Engine (v1.2.1)
 
 - Colorize supported black-and-white manga pages with the configured AI model.
 - Run supported inference locally using the configured backend.
-- Choose from available styles:
-  - Anime Soft Watercolor
-  - Vibrant Shonen Action
-  - Dreamy Pastel Shojo
+- Choose from 3 distinct, edge-aware colorization aesthetics:
+  - **Anime Soft Watercolor** (`anime_soft_watercolor`): Balanced pastel tones, gentle shading, warm natural skin tones, and soft watercolor rolloff inspired by *Blue Box*.
+  - **Vibrant Shonen Action** (`vibrant_shonen_action`): High saturation (+42%), dynamic S-curve contrast, punchy primary reds and blues, and energetic action lighting.
+  - **Dreamy Pastel Shojo** (`dreamy_pastel_shojo`): Delicate blush highlights, lifted luminous shadows, soft ethereal glow, and gentle romantic atmosphere.
+- Clean line-art preservation keeps ink strokes deep black without color bleed or halos.
+- Pure white speech bubble retention ensures dialogue text and margins remain clean paper white (#FFFFFF).
 - Preserve original scans while saving generated colorized outputs separately.
 - Review generated pages before accepting them into your final collection.
 

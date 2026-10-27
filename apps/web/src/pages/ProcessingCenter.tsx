@@ -33,7 +33,7 @@ export const ProcessingCenter: React.FC = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId);
   const [selectedChapterId, setSelectedChapterId] = useState<string>(initialChapterId);
   const [selectedProvider, setSelectedProvider] = useState<string>('local_gpu');
-  const [selectedModel, setSelectedModel] = useState<string>('anime_soft');
+  const [selectedModel, setSelectedModel] = useState<string>('anime_soft_watercolor');
   const [skipApproved, setSkipApproved] = useState<boolean>(true);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled'>('all');
@@ -105,21 +105,36 @@ export const ProcessingCenter: React.FC = () => {
     },
   });
 
+  const STYLE_DISPLAY_NAMES: Record<string, { name: string; badgeClass: string }> = {
+    anime_soft_watercolor: { name: 'Anime Soft Watercolor', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' },
+    anime_soft: { name: 'Anime Soft Watercolor', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' },
+    vibrant_shonen_action: { name: 'Vibrant Shonen Action', badgeClass: 'bg-amber-50 text-amber-700 border-amber-200' },
+    vibrant_shonen: { name: 'Vibrant Shonen Action', badgeClass: 'bg-amber-50 text-amber-700 border-amber-200' },
+    dreamy_pastel_shojo: { name: 'Dreamy Pastel Shojo', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200' },
+    pastel_shojo: { name: 'Dreamy Pastel Shojo', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200' },
+  };
+
   const colorStyles = [
     {
-      id: 'anime_soft',
+      id: 'anime_soft_watercolor',
       name: 'Anime Soft Watercolor',
-      desc: 'Balanced pastel tones, gentle shading, perfect for romance and slice of life (Blue Box style).',
+      tagline: 'Romance & Slice-of-Life',
+      desc: 'Balanced pastel tones, gentle shading, warm skin tones, and soft watercolor rolloff inspired by Blue Box.',
+      swatches: ['#FDE8E9', '#BEE3F8', '#C6F6D5', '#FEFCBF'],
     },
     {
-      id: 'vibrant_shonen',
+      id: 'vibrant_shonen_action',
       name: 'Vibrant Shonen Action',
-      desc: 'High saturation, dynamic contrast, punchy primary colors for high-energy scenes.',
+      tagline: 'High-Energy Action Drama',
+      desc: 'High saturation, dynamic contrast, punchy primary colors, and dramatic action lighting.',
+      swatches: ['#E53E3E', '#3182CE', '#D69E2E', '#805AD5'],
     },
     {
-      id: 'pastel_shojo',
+      id: 'dreamy_pastel_shojo',
       name: 'Dreamy Pastel Shojo',
-      desc: 'Soft warm aesthetic, light highlights, low contrast for emotional pages.',
+      tagline: 'Delicate Ethereal Glow',
+      desc: 'Soft warm aesthetic, blush highlights, lifted luminous shadows, and dreamy emotional atmosphere.',
+      swatches: ['#FED7E2', '#E9D8FD', '#FEFCBF', '#C4F1F9'],
     },
   ];
 
@@ -228,27 +243,49 @@ export const ProcessingCenter: React.FC = () => {
 
             {/* Color Style Selection */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-600">
-                Colorization Style
-              </label>
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-600">
+                  Colorization Style
+                </label>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Edge-aware & line-art preserved
+                </span>
+              </div>
+              <div className="space-y-2.5">
                 {colorStyles.map((style) => (
                   <div
                     key={style.id}
                     onClick={() => setSelectedModel(style.id)}
-                    className={`p-3 rounded-xl border cursor-pointer transition ${
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition ${
                       selectedModel === style.id
-                        ? 'border-studio-500 bg-studio-50 text-studio-900 shadow-sm'
+                        ? 'border-studio-500 bg-studio-50/70 text-studio-950 shadow-sm ring-1 ring-studio-500'
                         : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold">{style.name}</span>
-                      {selectedModel === style.id && (
-                        <Check className="w-3.5 h-3.5 text-studio-600" />
-                      )}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold">{style.name}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium">
+                          {style.tagline}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center -space-x-1">
+                          {style.swatches.map((color, i) => (
+                            <span
+                              key={i}
+                              className="w-3.5 h-3.5 rounded-full border border-white shadow-xs"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                        {selectedModel === style.id && (
+                          <Check className="w-4 h-4 text-studio-600 flex-shrink-0" />
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1">{style.desc}</p>
+                    <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">{style.desc}</p>
                   </div>
                 ))}
               </div>
@@ -426,11 +463,18 @@ export const ProcessingCenter: React.FC = () => {
                            <Clock className="w-5 h-5" />}
                         </div>
                         <div>
-                          <h3 className="text-sm font-bold text-slate-800">
-                            Batch Job #{job.id.slice(0, 8)}
-                          </h3>
-                          <p className="text-[11px] text-slate-400">
-                            {job.model_name} • {job.provider} • {new Date(job.created_at).toLocaleTimeString()}
+                          <div className="flex items-center space-x-2">
+                            <h3 className="text-sm font-bold text-slate-800">
+                              Batch Job #{job.id.slice(0, 8)}
+                            </h3>
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                              STYLE_DISPLAY_NAMES[job.model_name]?.badgeClass || 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                              {STYLE_DISPLAY_NAMES[job.model_name]?.name || job.model_name}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            {job.provider} • {new Date(job.created_at).toLocaleTimeString()}
                           </p>
                         </div>
                       </div>
