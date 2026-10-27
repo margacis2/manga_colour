@@ -5,6 +5,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.0+-61DAFB.svg)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4+-38B2AC.svg)](https://tailwindcss.com/)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/margacis2/manga_colour/blob/main/notebooks/colab_colorization.ipynb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Blue Box Color Studio** is a modern full-stack, local-first studio designed for manga artists, scanlators, and fan-colorizers. It provides an end-to-end workflow: decompressing original manga archives, AI batch colorization with character palette consistency, interactive split-screen quality control, vertical webtoon reading, storage optimization, and professional PDF / CBZ export.
